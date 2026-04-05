@@ -1,0 +1,268 @@
+{
+  "attack_types": [
+    {
+      "id": "reentrancy",
+      "name": "Reentrancy",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Race condition / TOCTOU",
+      "description": "Re-enter a function before state updates, draining funds recursively"
+    },
+    {
+      "id": "access-control-missing",
+      "name": "Access Control Missing",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Broken access control (OWASP A01)",
+      "description": "Privileged functions lack onlyOwner or role checks, anyone can call"
+    },
+    {
+      "id": "integer-overflow-underflow",
+      "name": "Integer Overflow / Underflow",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Arithmetic overflow",
+      "description": "Wrap uint256 boundaries to produce unintended large or zero values"
+    },
+    {
+      "id": "unchecked-return-value",
+      "name": "Unchecked Return Value",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Improper error handling",
+      "description": "transfer() or call() return value ignored, failure silently continues"
+    },
+    {
+      "id": "delegatecall-injection",
+      "name": "Delegatecall Injection",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Code injection via trusted path",
+      "description": "Proxy delegates to attacker-controlled implementation, storage overwritten"
+    },
+    {
+      "id": "read-only-reentrancy",
+      "name": "Read-Only Reentrancy",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "TOCTOU on read path",
+      "description": "View function called mid-execution while state is inconsistent across protocols"
+    },
+    {
+      "id": "tx-origin-phishing",
+      "name": "Tx.Origin Phishing",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "CSRF",
+      "description": "Contract uses tx.origin instead of msg.sender, attacker tricks user via malicious contract"
+    },
+    {
+      "id": "self-destruct-exploit",
+      "name": "Self-Destruct Exploit",
+      "category": "Smart Contract Bug",
+      "web2_equivalent": "Forced state corruption",
+      "description": "Force-send ETH via selfdestruct breaking balance-based invariants"
+    },
+    {
+      "id": "flash-loan-attack",
+      "name": "Flash Loan Attack",
+      "category": "Business Logic",
+      "web2_equivalent": "Business logic abuse / TOCTOU",
+      "description": "Borrow uncollateralized funds within single tx to manipulate state or drain liquidity"
+    },
+    {
+      "id": "price-oracle-manipulation",
+      "name": "Price Oracle Manipulation",
+      "category": "Business Logic",
+      "web2_equivalent": "Second-order injection / untrusted input source",
+      "description": "Skew AMM spot price used as oracle to borrow against inflated collateral"
+    },
+    {
+      "id": "donation-inflation-attack",
+      "name": "Donation / Inflation Attack",
+      "category": "Business Logic",
+      "web2_equivalent": "Parameter tampering",
+      "description": "Donate tokens directly to vault to inflate share price, grief depositors"
+    },
+    {
+      "id": "slippage-deadline-missing",
+      "name": "Slippage / Deadline Missing",
+      "category": "Business Logic",
+      "web2_equivalent": "Missing input validation",
+      "description": "Swap with no slippage protection, trivially sandwichable"
+    },
+    {
+      "id": "governance-attack",
+      "name": "Governance Attack",
+      "category": "Business Logic",
+      "web2_equivalent": "Privilege escalation via legitimate path",
+      "description": "Acquire voting power via flash loan to pass malicious proposals"
+    },
+    {
+      "id": "signature-replay",
+      "name": "Signature Replay",
+      "category": "Cryptographic",
+      "web2_equivalent": "Auth token replay / missing nonce",
+      "description": "Reuse valid signature on different chain or context without chainId/nonce check"
+    },
+    {
+      "id": "sandwich-attack",
+      "name": "Sandwich Attack",
+      "category": "MEV / Ordering",
+      "web2_equivalent": "Race condition on shared resource",
+      "description": "Frontrun and backrun victim tx to profit from their price impact"
+    },
+    {
+      "id": "frontrunning",
+      "name": "Frontrunning",
+      "category": "MEV / Ordering",
+      "web2_equivalent": "Race condition",
+      "description": "Copy pending tx with higher gas to execute first and steal opportunity"
+    },
+    {
+      "id": "cross-chain-bridge-exploit",
+      "name": "Cross-Chain Bridge Exploit",
+      "category": "Infrastructure",
+      "web2_equivalent": "Broken trust boundary between systems",
+      "description": "Forge or replay messages between chains to mint unbacked tokens"
+    },
+    {
+      "id": "private-key-compromise",
+      "name": "Private Key Compromise",
+      "category": "Operational",
+      "web2_equivalent": "Admin credential theft",
+      "description": "Leaked deployer key used to upgrade contract or drain treasury"
+    },
+    {
+      "id": "supply-chain",
+      "name": "Supply Chain",
+      "category": "Operational",
+      "web2_equivalent": "Dependency confusion / typosquatting",
+      "description": "Malicious package mimics legitimate one, injects key exfiltration at build time"
+    }
+  ],
+  "exploits": [
+    {
+      "id": "bybit-2025",
+      "attack_type": "supply-chain",
+      "affected_protocol": {
+        "name": "Bybit",
+        "version": null
+      },
+      "date": "2025-02-21",
+      "chain": "Ethereum",
+      "loss_amount": "$1.4B",
+      "severity": "Critical",
+      "description": "Compromised signing infrastructure via supply chain attack on Safe multisig UI",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/bybit-rekt/",
+        "https://thehackernews.com/2025/02/bybit-hack-traced-to-safewallet-supply.html"
+      ],
+      "detailed_narrative": "The attack began with a supply-chain compromise of Safe{Wallet}'s infrastructure. Attackers (Lazarus Group) compromised a Safe developer machine via social engineering/malware, gaining access to the Safe UI codebase. They injected malicious JavaScript into the app.safe.global interface (specifically targeting Bybit's cold wallet flow). The injected code was benign for all other users but, when Bybit signers loaded the UI on Feb 21, 2025, it silently altered the transaction payload. Signers believed they were approving a routine ~30,000 ETH transfer to a hot wallet; instead, the UI submitted a disguised delegatecall that overwrote the cold wallet proxy's implementation slot (storage slot 0) with an attacker-controlled contract (0xbDd077f651EBe7f7b3cE16fe5F2b025BE2969516). This single signed transaction redirected all future logic, allowing the attackers to drain 401,347 ETH (~$1.4B at the time) from the multisig cold wallet in one atomic execution. Funds were then rapidly laundered across DEXes, mixers, and bridges. The attack succeeded because the UI tampering bypassed the multisig visual verification process—signers never saw the real payload."
+    },
+    {
+      "id": "crosscurve-2026",
+      "attack_type": "access-control-missing",
+      "affected_protocol": {
+        "name": "CrossCurve",
+        "version": "v1.0"
+      },
+      "date": "2026-02-08",
+      "chain": "Multi-chain (Axelar-integrated)",
+      "loss_amount": "$3M",
+      "severity": "High",
+      "description": "Missing access control on bridge relay function allowed unauthorized cross-chain message execution",
+      "attacker_tx": null,
+      "links": [
+        "https://www.halborn.com/blog/post/explained-the-crosscurve-hack-february-2026"
+      ],
+      "detailed_narrative": "The root cause was insufficient validation in the ReceiverAxelar contract's expressExecute-like functions. These functions were intended to process only messages originating from the Axelar network, but they lacked robust origin verification and signature checks. The attacker crafted malicious cross-chain messages that mimicked legitimate Axelar payloads. These forged messages passed the weak validation checks and instructed the ReceiverAxelar contract to release specified token amounts to attacker-controlled addresses. The ReceiverAxelar then called the PortalV2 contract to unlock liquidity, believing a valid deposit had occurred on the source chain. The attacker repeated this across every supported chain, draining liquidity pools without any corresponding source-chain deposit. After extraction, the stolen tokens were swapped into liquid assets and laundered. The team responded by shutting down bridge components and investigating. No smart-contract bug bounty or formal verification had caught the missing access-control checks on the relay path."
+    },
+    {
+      "id": "truebit-2026",
+      "attack_type": "integer-overflow-underflow",
+      "affected_protocol": {
+        "name": "Truebit",
+        "version": "v1.0"
+      },
+      "date": "2026-01-08",
+      "chain": "Ethereum",
+      "loss_amount": "$26.2M",
+      "severity": "Critical",
+      "description": "Liquidity math error from unchecked arithmetic caused inflated token minting",
+      "attacker_tx": "0xcd4755645595094a8ab984d0db7e3b4aabde72a5c87c4f176a030629c47fb014",
+      "links": [
+        "https://rekt.news/truebit-rekt",
+        "https://etherscan.io/tx/0xcd4755645595094a8ab984d0db7e3b4aabde72a5c87c4f176a030629c47fb014"
+      ],
+      "detailed_narrative": "Truebit's Purchase contract (deployed 2021, unverified bytecode, Solidity 0.5.3) contained an unprotected addition in getPurchasePrice(uint256 amount). SafeMath guarded mul/div but not this addition, allowing overflow on absurdly large inputs. Step-by-step: (1) Attacker called getPurchasePrice() with an astronomical TRU amount → overflow returned near-zero ETH cost. (2) Minted 240+ million TRU for pennies via the mint function. (3) Approved/transferred tokens to the Purchase contract. (4) Burned them at the 12.5% buyback rate, receiving real ETH. (5) Repeated the mint-burn cycle 5 times atomically in one tx (no price impact between steps). Total: 8,535 ETH drained into Tornado Cash. The same attacker wallet had previously hit Sparkle (5 ETH). Funding traced to Rhino.fi (Nov/Dec 2025). A copycat exploited the now-public vuln for ~$250K. TRU token went to zero. The contract had no supply cap, no per-tx limits, and had sat dormant as a 'rug zone' since 2021. Attacker contract: 0x1de399967b206e446b4e9aeeb3cb0a0991bf11b8; original wallet: 0x6c8ec8f14be7c01672d31cfa5f2cefeab2562b50."
+    },
+    {
+      "id": "yieldblox-dao-2026",
+      "attack_type": "price-oracle-manipulation",
+      "affected_protocol": {
+        "name": "YieldBlox DAO",
+        "version": "v1.0"
+      },
+      "date": "2026-02-22",
+      "chain": "Stellar (Blend V2)",
+      "loss_amount": "$10.97M",
+      "severity": "High",
+      "description": "Oracle price manipulation allowed borrowing against inflated collateral values",
+      "attacker_tx": "0x3e81a3f7b6e17cc22d0a1f33e9dcf90e5664b125b9e61f108b8d2f082f2d4657 (XLM borrow) + 0xae721cacee382bdecac8d2c47286ecd42cb4711f658bb2aec7cba60dc64a31ff (USDC borrow)",
+      "links": [
+        "https://rekt.news/yieldblox-rekt",
+        "https://stellar.expert/explorer/public/tx/3e81a3f7b6e17cc22d0a1f33e9dcf90e5664b125b9e61f108b8d2f082f2d4657"
+      ],
+      "detailed_narrative": "YieldBlox DAO lending pool (on Blend V2, Stellar) used the Reflector VWAP oracle for USTRY/USDC collateral pricing. The market had near-zero liquidity after the only market maker withdrew. Attacker: (1) Placed a sell offer for USTRY at 501 USDC per token (100x real price ~$1.06). (2) Used a second account to buy 0.05 USTRY against that offer in one trade, dominating the oracle's 15-minute window. (3) Reflector oracle reported ~$106.74 price. (4) Protocol accepted the inflated valuation and allowed massive borrowing: 1,000,196 USDC + 61,249,278 XLM (~$10.97M total). Funds withdrawn in two blocks. $7.2M later frozen by Stellar Tier-1 validators; ~$3M unrecovered. No circuit breakers, no liquidity-depth requirements, no sanity checks on oracle inputs. Classic thin-market manipulation exploiting a configuration that routed pricing through an illiquid DEX pair."
+    },
+    {
+      "id": "iotex-iotube-2026",
+      "attack_type": "cross-chain-bridge-exploit",
+      "affected_protocol": {
+        "name": "IoTeX ioTube",
+        "version": "v1.0"
+      },
+      "date": "2026-02-25",
+      "chain": "IoTeX + Ethereum side",
+      "loss_amount": "$4.4M",
+      "severity": "High",
+      "description": "Bridge message replay allowed minting unbacked wrapped tokens on destination chain",
+      "attacker_tx": null,
+      "links": [
+        "https://www.halborn.com/blog/post/explained-the-iotex-hack-february-2026"
+      ],
+      "detailed_narrative": "The attacker first compromised the private key of the Ethereum-side Validator contract owner. Using that key: (1) Executed a malicious upgrade to the Validator contract, stripping validation and signature checks. (2) Gained admin control over TokenSafe (reserves) and MintPool contracts. (3) Drained ~$4.3M in real tokens from TokenSafe using admin privileges. (4) Minted ~111 million unbacked CIOTX tokens via MintPool. Most minted tokens were frozen on IoTeX/Binance chains; only ~$1.7M was swapped on DEX and considered at risk. IoTeX officially valued the loss at $4.4M (discounting frozen minted assets). The upgrade bypassed all cross-chain minting safeguards, allowing arbitrary token creation without collateral on the source chain. Funds were quickly moved and laundered."
+    },
+    {
+      "id": "drift-protocol-2026",
+      "attack_type": "private-key-compromise",
+      "affected_protocol": {
+        "name": "Drift Protocol",
+        "version": "v2.0"
+      },
+      "date": "2026-04-01",
+      "chain": "Solana",
+      "loss_amount": "$285M",
+      "severity": "Critical",
+      "description": "Deployer private key leaked, attacker upgraded program and drained treasury",
+      "attacker_tx": null,
+      "links": [
+        "https://news.bitcoin.com/drift-protocol-hack-2026-what-happened-who-lost-money-and-whats-next/"
+      ],
+      "detailed_narrative": "The attack combined oracle deception with social engineering (not pure key leak but pre-signed admin access). Over three weeks: (1) Attacker withdrew ETH from Tornado Cash (March 11) and deployed carbonvote token (CVT) on Solana (March 12, Pyongyang-time timestamp). (2) Seeded minimal liquidity on Raydium + wash trading to peg CVT at ~$1 (oracles treated it as valid collateral). (3) Used Solana durable nonces to socially engineer Security Council members into pre-signing 'routine' admin transactions (March 23–30). (4) On March 27 Drift migrated to 2-of-5 multisig and removed timelock (zero-delay execution). (5) April 1: attacker activated pre-signed txs, listed CVT as collateral, raised limits, deposited massive fake CVT, and withdrew real assets (JLP, USDC, SOL, wBTC, wETH) in 31 txs over 12 minutes. Funds swapped via Jupiter → bridged to Ethereum → ETH/USDC/Binance. Attributed to DPRK Lazarus Group. TVL dropped ~$1B across Solana DeFi; multiple downstream protocols paused or lost funds. No code bug—pure governance + oracle manipulation via human-targeted pre-signing."
+    },
+    {
+      "id": "venus-protocol-2026",
+      "attack_type": "price-oracle-manipulation",
+      "affected_protocol": {
+        "name": "Venus Protocol",
+        "version": null
+      },
+      "date": "2026-03-16",
+      "chain": "BSC",
+      "loss_amount": "$2.18M",
+      "severity": "High",
+      "description": "Price manipulation of $THE token led to bad debt on Venus Protocol",
+      "attacker_tx": null,
+      "links": [
+        "https://x.com/lookonchain/status/2033371536875491706"
+      ],
+      "detailed_narrative": "(1) Nine-month preparation phase (June 2025 – March 2026): Attacker sourced 7,447 ETH (~$16.29M) through 77 Tornado Cash transactions, deposited as collateral on Aave, borrowing ~$9.92M in stablecoins, and quietly accumulated $THE representing 84% of Venus's 14.5M $THE supply cap. (2) Bypassing the supply cap (donation attack, March 15, 2026): Used six wallets to transfer ~36M $THE directly to the vTHE contract (bypassing mint()), inflating the vTHE exchange rate 3.81×, turning a ~$3.3M position into ~$12M nominal collateral. Normal deposits added 12.2M $THE (within cap), but donations pushed total to 53.2M $THE (367% of cap). Deployed attack contract (0x737bc98f1d34e19539c074b8ad1169d5d45da619) with borrowing permissions. (3) Price manipulation and recursive borrowing loop (March 15, 2026): With inflated collateral, borrowed CAKE, BNB, BTCB, USDC, etc., using them to buy more $THE on DEXes (violent price impact due to thin liquidity). $THE price pumped from ~$0.26 to ~$4 (spot peak), but Venus's Resilient Oracle (RedStone + Binance feeds) resisted via BoundValidator for ~37 minutes. Once feeds converged at ~$0.51 (double pre-attack price), loop escalated: Borrow → Buy $THE → Donate to vTHE → Inflate rate → Borrow more → Repeat. Peak: 53.2M $THE collateral against ~$14.9M borrowed (~$30M nominal value). (4) Extraction and implosion (March 15-16, 2026): ~50 transactions extracted assets over hours. Greed led to over-leveraging; $THE crashed to $0.22 (below starting point) due to sell pressure and liquidation. Position liquidated, but thin liquidity meant $30M nominal collateral yielded nothing recoverable. Bad debt: 1.18M CAKE and 1.84M THE stuck in protocol. (5) Post-attack developments: Venus paused markets, adjusted collateral factors for illiquid assets, committed to governance proposals for bad debt resolution, supply cap hardening, and re-audits. Attacker's funds parked; potential off-chain profits via CEX shorts untraceable."
+    }
+  ]
+}

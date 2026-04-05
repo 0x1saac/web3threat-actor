@@ -1,0 +1,5 @@
+{
+  "name": "web3threat.actor",
+  "description": "A comprehensive database of smart contract vulnerabilities, business logic flaws, and historical exploits that have shaped the decentralized ecosystem.",
+  "requestFramePermissions": []
+}
