@@ -231,8 +231,8 @@ export default function App() {
         <div className="relative z-10 w-full pb-12">
           <h1 className="text-2xl md:text-3xl font-bold font-saira tracking-tight">
             <span className="text-red-500">web3</span>
-            <span className="text-neutral-400">exploit</span>
-            <span className="text-neutral-600">db</span>
+            <span className="text-neutral-400">threat</span>
+            <span className="text-neutral-600">.actor</span>
           </h1>
         </div>
 
