@@ -1,6 +1,18 @@
+```
+                 _    ____  _   _                    _                 _             
+ __      _____  | |__|___ \| |_| |__  _ __ ___  __ _| |_   __ _  ___| |_ ___  _ __ 
+ \ \ /\ / / _ \ | '_ \ __) | __| '_ \| '__/ _ \/ _` | __| / _` |/ __| __/ _ \| '__|
+  \ V  V /  __/ | |_) |__) | |_| | | | | |  __/ (_| | || | (_| | (__| || (_) | |   
+   \_/\_/ \___| |_.__/____/ \__|_| |_|_|  \___|\__,_|\__(_)__,_|\___|\__\___/|_|   
+```
+
+<div align="center">
+
 # web3threat.actor
 
 A comprehensive, open-source database of smart contract vulnerabilities, business logic flaws, and real-world exploits that have shaped the decentralized ecosystem — presented as an interactive web application.
+
+</div>
 
 ![React](https://img.shields.io/badge/React-19-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue) ![Vite](https://img.shields.io/badge/Vite-6-purple) ![TailwindCSS](https://img.shields.io/badge/Tailwind-4-cyan) ![License](https://img.shields.io/badge/license-MIT-green)
 
