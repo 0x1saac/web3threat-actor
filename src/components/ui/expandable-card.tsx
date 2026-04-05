@@ -30,6 +30,7 @@ export function ExpandableCard({
     content: () => React.ReactNode;
     subtitle?: string;
     tag?: string;
+    date?: string;
   }[];
 }) {
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
@@ -170,6 +171,14 @@ export function ExpandableCard({
                 >
                   {card.description}
                 </motion.p>
+                {card.date && (
+                  <motion.span
+                    layoutId={`date-${card.title}-${id}`}
+                    className="text-neutral-500 text-[11px] mt-2"
+                  >
+                    {new Date(card.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                  </motion.span>
+                )}
               </div>
             </div>
           </motion.div>

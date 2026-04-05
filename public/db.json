@@ -132,6 +132,13 @@
       "category": "Operational",
       "web2_equivalent": "Dependency confusion / typosquatting",
       "description": "Malicious package mimics legitimate one, injects key exfiltration at build time"
+    },
+    {
+      "id": "role-play-attack",
+      "name": "Role-Play Attack",
+      "category": "Business Logic",
+      "web2_equivalent": "Self-dealing / wash trading abuse",
+      "description": "Attacker plays multiple roles (e.g., LP and trader) within a single protocol to exploit internal accounting logic"
     }
   ],
   "exploits": [
@@ -263,6 +270,25 @@
         "https://x.com/lookonchain/status/2033371536875491706"
       ],
       "detailed_narrative": "(1) Nine-month preparation phase (June 2025 – March 2026): Attacker sourced 7,447 ETH (~$16.29M) through 77 Tornado Cash transactions, deposited as collateral on Aave, borrowing ~$9.92M in stablecoins, and quietly accumulated $THE representing 84% of Venus's 14.5M $THE supply cap. (2) Bypassing the supply cap (donation attack, March 15, 2026): Used six wallets to transfer ~36M $THE directly to the vTHE contract (bypassing mint()), inflating the vTHE exchange rate 3.81×, turning a ~$3.3M position into ~$12M nominal collateral. Normal deposits added 12.2M $THE (within cap), but donations pushed total to 53.2M $THE (367% of cap). Deployed attack contract (0x737bc98f1d34e19539c074b8ad1169d5d45da619) with borrowing permissions. (3) Price manipulation and recursive borrowing loop (March 15, 2026): With inflated collateral, borrowed CAKE, BNB, BTCB, USDC, etc., using them to buy more $THE on DEXes (violent price impact due to thin liquidity). $THE price pumped from ~$0.26 to ~$4 (spot peak), but Venus's Resilient Oracle (RedStone + Binance feeds) resisted via BoundValidator for ~37 minutes. Once feeds converged at ~$0.51 (double pre-attack price), loop escalated: Borrow → Buy $THE → Donate to vTHE → Inflate rate → Borrow more → Repeat. Peak: 53.2M $THE collateral against ~$14.9M borrowed (~$30M nominal value). (4) Extraction and implosion (March 15-16, 2026): ~50 transactions extracted assets over hours. Greed led to over-leveraging; $THE crashed to $0.22 (below starting point) due to sell pressure and liquidation. Position liquidated, but thin liquidity meant $30M nominal collateral yielded nothing recoverable. Bad debt: 1.18M CAKE and 1.84M THE stuck in protocol. (5) Post-attack developments: Venus paused markets, adjusted collateral factors for illiquid assets, committed to governance proposals for bad debt resolution, supply cap hardening, and re-audits. Attacker's funds parked; potential off-chain profits via CEX shorts untraceable."
+    },
+    {
+      "id": "denaria-finance-2026",
+      "attack_type": "role-play-attack",
+      "affected_protocol": {
+        "name": "Denaria Finance",
+        "version": null
+      },
+      "date": "2026-04-06",
+      "chain": "Linea",
+      "loss_amount": "$165K",
+      "severity": "Medium",
+      "description": "Role-Play Attack exploiting AMM PnL accounting logic by playing both LP and trader roles atomically",
+      "attacker_tx": "0xcb0744a0d453e5556f162608fae8275dabd14292bffbfcd8394af4610c606447",
+      "links": [
+        "https://x.com/DenariaFinance/status/2040735189203071024",
+        "https://arxiv.org/abs/2310.01081"
+      ],
+      "detailed_narrative": "The attacker exploited Denaria Finance's perp-DEX PnL settlement logic using a 'Role-Play Attack' pattern (arxiv.org/abs/2310.01081), simultaneously acting as liquidity provider and trader to game the protocol's internal accounting. Attack flow: (1) Flash-loaned 60K USDC from Aave on Linea. (2) Deployed two helper contracts, A and B. (3) Helper A deposited collateral and added liquidity via addLiquidity, becoming the dominant LP in the pool. (4) Helper B deposited collateral and opened a large position against A's liquidity, shifting the AMM's internal state—the settlement engine interpreted this movement as 'earned profit' for the LP. (5) Helper A settled PnL and called removeCollateral, withdrawing far more than its original deposit. The attack was executed in two rounds: Round 1 deposited 45K USDC and withdrew 183K USDC; Round 2 deposited 15K USDC and withdrew 42K USDC. After repaying the 60K USDC flash loan, net profit was 165,617 USDC. The entire attack was atomic, executed within a single transaction."
     }
   ]
 }

@@ -181,6 +181,7 @@ export default function App() {
       title: exploit.affected_protocol.name,
       description: exploit.description,
       tag: exploit.severity,
+      date: exploit.date,
       ctaText: "View Post-Mortem",
       ctaLink: typeof exploit.links === 'string' ? exploit.links : (exploit.links && exploit.links[0] ? exploit.links[0] : "#"),
       content: () => (
