@@ -139,6 +139,20 @@
       "category": "Business Logic",
       "web2_equivalent": "Self-dealing / wash trading abuse",
       "description": "Attacker plays multiple roles (e.g., LP and trader) within a single protocol to exploit internal accounting logic"
+    },
+    {
+      "id": "oracle-misconfiguration",
+      "name": "Oracle Misconfiguration",
+      "category": "Operational",
+      "web2_equivalent": "Configuration drift / stale cache invalidation",
+      "description": "Safety-layer oracle parameters drift out of sync with market reality, causing incorrect pricing and unwarranted liquidations"
+    },
+    {
+      "id": "zk-proof-misconfiguration",
+      "name": "ZK Proof Misconfiguration",
+      "category": "Cryptographic",
+      "web2_equivalent": "Incomplete PKI ceremony / default credentials shipped to production",
+      "description": "Incomplete or skipped trusted setup ceremony leaves ZK verifier accepting any proof, enabling forged withdrawals"
     }
   ],
   "exploits": [
@@ -313,6 +327,165 @@
         "https://www.coindesk.com/markets/2026/03/12/crypto-investor-turns-usd50-million-into-usd36-000-in-one-botched-move"
       ],
       "detailed_narrative": "On March 12, 2026, a user attempted a routine collateral rotation on Aave—swapping ~$50.4M aEthUSDT into aEthAAVE—via mobile. The trade routed through Aave's new CoW Protocol integration (which had replaced the ParaSwap-based system in December 2025). (1) A CoW solver found a path: burn aEthUSDT → withdraw $50.4M USDT from Aave → swap to 17,957 WETH via Uniswap V3's deep USDT/WETH pool (clean execution) → push all WETH into the SushiSwap AAVE/WETH pool (0xD75EA151a61d06868E31F8988D28DFE5E9df57B4). (2) The SushiSwap pool held only 331.63 AAVE + 17.65 WETH (~$74K total liquidity). The trade pushed 17,957 WETH into a pool holding 17.65 WETH—1,017× the pool's entire reserve. (3) The AMM surrendered nearly all AAVE inventory: output was 327.24 AAVE (~$36K). The signed minimum buy amount was already 324.94 AAVE—the catastrophic route was baked in before settlement. Auto-slippage was 1.21%, meaningless on a 99% price-impact trade. (4) The interface showed warnings and required a confirmation checkbox; the user confirmed on mobile. (5) Value extraction cascade within the same block: an MEV bot backran (not sandwiched) the AAVE/WETH and USDT/WETH legs for ~$12.5M profit (harvest tx: 0x45388b0f9ff46ffe98a3124c22ab1db2b1764ecb3b61234e29e5c9732b7fd4ab), paying 13,087 ETH (~$30.2M) to Titan Builder; Titan's total block revenue was ~$34.3M; Lido (block proposer) received 568 ETH (~$1.2M); DEX LPs absorbed ~$3.5M passively. (6) Root cause: when Aave Labs replaced ParaSwap with CoW in December 2025, the old hard slippage cap (~30%) was not carried over. The teams who built the original protection (BGD Labs, ACI) were not consulted. DefiLlama's free LlamaSwap tool would have blocked the same trade entirely. (7) Aftermath: Aave returned $110,368 in collected fees and introduced 'Aave Shield' (25% price-impact hard block, on by default). CoW DAO refunded its fees and disclosed compounding failures: a stale hardcoded gas ceiling had rejected better solver quotes, a winning solver abandoned the order after two failed on-chain submissions, and the private RPC transaction showed evidence of mempool leakage (investigation ongoing). CoW also noted that even the best quotes implied ~90% loss on a $50M fill-or-kill order on an illiquid pair. The incident occurred days after a separate Aave misconfiguration (CAPO oracle) triggered $27.78M in wrongful wstETH liquidations on March 10. Community poll split blame: ~41% user, ~44% frontend, ~15% protocol."
+    },
+    {
+      "id": "aave-capo-oracle-2026",
+      "attack_type": "oracle-misconfiguration",
+      "affected_protocol": {
+        "name": "Aave",
+        "version": "v3"
+      },
+      "date": "2026-03-10",
+      "chain": "Ethereum",
+      "loss_amount": "$27.78M",
+      "severity": "Critical",
+      "description": "Stale CAPO oracle parameters caused wstETH to be priced 2.85% below market, triggering $27.78M in wrongful liquidations of healthy E-Mode positions",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/aave-rekt",
+        "https://governance.aave.com/t/post-mortem-exchange-rate-misallignment-on-wsteth-core-and-prime-instances/24269",
+        "https://governance.aave.com/t/direct-to-aip-wsteth-capo-oracle-incident-user-reimbursement/24275",
+        "https://x.com/omeragoldberg/status/2031501920318242847",
+        "https://x.com/yieldsandmore/status/2031468808012210538",
+        "https://x.com/ltvprotocol/status/2031351985845248370",
+        "https://www.coindesk.com/business/2026/03/10/defi-lending-platform-aave-sees-a-rare-usd27-million-liquidations-after-a-price-glitch"
+      ],
+      "detailed_narrative": "On March 10, 2026, Aave's own Correlated Asset Price Oracle (CAPO) — a protective layer on top of Chainlink feeds designed to cap how fast the wstETH/stETH exchange rate could grow — misfired and liquidated 34 accounts holding 10,938 wstETH ($27.78M). No attacker was involved; the underlying Chainlink feed worked perfectly throughout. Root cause: CAPO relies on three parameters: snapshotRatio (anchor exchange rate), snapshotTimestamp (when it was set), and maxYearlyRatioGrowthPercent (growth cap). The wstETH CAPO contracts were initialized in early 2024 with a snapshotRatio of ~1.15. By March 2026, the real wstETH/ETH rate had grown to ~1.2285. (1) Chaos Labs' off-chain Edge Risk engine computed a correct snapshotRatio update to ~1.2282, with a timestamp set to 7 days prior (as designed). (2) However, an on-chain rate limiter capped any single update at 3% per 3 days. The existing on-chain ratio was ~1.1572, so the contract could only accept ~1.1919 — the oracle submitted this fallback value. (3) The timestamp, facing no such constraint, advanced to the 7-day-old reference point. This created a fatal mismatch: ratio anchored at ~1.1919 paired with a timestamp 7 days back. CAPO extrapolated forward from a number the ratio never reached, computing a ceiling of ~1.1939 — below the live market rate of ~1.2285. (4) Aave began pricing wstETH 2.85% below market. E-Mode positions (high LTV against correlated assets) were especially vulnerable — the small deviation pushed leveraged positions across liquidation thresholds. (5) AgentHub (BGD Labs' automated execution layer via Chainlink Automation) executed the parameter update one block after submission — no manual review, no human in loop. Parameter update tx: 0xfbafeaa8c58dd6d79f88cdf5604bd25760964bc8fc0e834fe381bb1d96d3db95; execution tx: 0x32c64151469cf2202cbc9581139c6de7b34dae2012eba9daf49311265dfe5a1e. (6) Liquidators captured ~512 ETH total: ~116 ETH from standard liquidation bonuses, ~13 ETH from fees, and ~382 ETH from pure arbitrage (buying wstETH at Aave's depressed price ~1.1939 and selling at market ~1.2285). (7) A near-identical mismatch had almost triggered ~1 month earlier but the CAPO wstETH agent wasn't connected yet — no alarm was raised. (8) Aftermath: Chaos Labs reduced wstETH borrow cap to 1 on Core and Prime instances (tx: 0x34f568b28dbcaf6a8272038ea441cbc864c8608fe044c590f9f03d0dac9cf7f8). 141.60 ETH recovered from Titan Builder + 13.32 ETH from liquidation fees. TokenLogic filed a Direct-to-AIP reimbursement proposal: 512.19 ETH total, 357.56 ETH net cost to DAO. The incident occurred amid major departures — BGD Labs (Feb 20) and ACI/Marc Zeller (March 3) both announced exits from Aave governance. Aave's Risk Oracle had streamed 1,200+ payloads across 3,000+ parameters without incident prior. No bad debt was incurred; full reimbursement planned."
+    },
+    {
+      "id": "veil-cash-2026",
+      "attack_type": "zk-proof-misconfiguration",
+      "affected_protocol": {
+        "name": "Veil Cash",
+        "version": null
+      },
+      "date": "2026-02-20",
+      "chain": "Base",
+      "loss_amount": "$5K",
+      "severity": "Low",
+      "description": "First confirmed live exploit of deployed ZK cryptography — Groth16 verifier with γ=δ accepted any proof, enabling forged withdrawals",
+      "attacker_tx": "0x5ff6dbc33e77fab8dc086bb9ea3c88f1ba81df198d24ec9fc0c5b50fb1a4a17d",
+      "links": [
+        "https://rekt.news/default-settings",
+        "https://blog.zksecurity.xyz/posts/groth16-setup-exploit/",
+        "https://coinsbench.com/forging-zksnark-proofs-via-misconfigured-verification-keys-the-veil-01-eth-exploit-2a6bb7d0078b",
+        "https://github.com/DK27ss/VeilCash-5K-PoC"
+      ],
+      "detailed_narrative": "Veil Cash was a Tornado Cash fork on Base using Groth16 zk-SNARKs for private withdrawals. The deployed verifier had gamma (γ) and delta (δ) both set to the BN254 G2 generator — the snarkjs Phase 2 default placeholder that the toolchain expects users to replace during trusted setup. The CLI command that generates random values for γ and δ was never run. When γ=δ, the verifier's pairing equation collapses to checking 1=1, accepting any fabricated proof. (1) Attacker called withdraw() 29 times using fabricated nullifier hashes (0xdead0000 through 0xdead001c), draining 2.9 ETH from the 0.1 ETH pool in a single transaction. (2) Decurity's DefimonAlerts monitoring detected the attack and performed a whitehat rescue of the remaining 2.025 ETH from other pools (tx: 0x42019ae0532a25e40068fa16d2c7e3a9ce006f0b872d84ae5b4540b368a0268c). (3) The original exploiter returned the drained 2.9 ETH later the same day (tx: 0x5a16ada9fbb068cc2492df57694b25ea56734eb6599c8f269767a23d10e0d162). 100% of funds recovered. (4) DK27ss published a full PoC on GitHub. CoinsBench published detailed analysis. The exploit technique was now publicly documented. (5) Pashov Audit Group had audited Veil Cash, but the verifier contract was explicitly out of scope. This was the first confirmed live exploit of ZK cryptography in production, and served as the blueprint for the larger FoomCash drain days later. ZKSecurity and Dedaub subsequently scanned all EVM chains for contracts with the same δ=γ fingerprint; no other live contracts with significant value were found, but GitHub repositories carrying the vulnerable defaults still exist, including a Tornado Cash rebuild with 248 stars."
+    },
+    {
+      "id": "foomcash-2026",
+      "attack_type": "zk-proof-misconfiguration",
+      "affected_protocol": {
+        "name": "FoomCash",
+        "version": null
+      },
+      "date": "2026-02-26",
+      "chain": "Ethereum + Base",
+      "loss_amount": "$2.26M",
+      "severity": "High",
+      "description": "Identical Groth16 γ=δ misconfiguration as Veil Cash exploited at scale — $1.84M rescued by Decurity, $320K kept under protocol's own 'code is law' bounty, net loss $420K",
+      "attacker_tx": "0xce20448233f5ea6b6d7209cc40b4dc27b65e07728f2cbbfeb29fc0814e275e48",
+      "links": [
+        "https://rekt.news/the-unfinished-proof",
+        "https://rekt.news/default-settings",
+        "https://www.quillaudits.com/blog/hack-analysis/foomcash-exploit-explained",
+        "https://github.com/DK27ss/FoomClub-1.6M-PoC",
+        "https://x.com/Foomclub_/status/2028231845788188747",
+        "https://blog.zksecurity.xyz/posts/groth16-setup-exploit/"
+      ],
+      "detailed_narrative": "FoomCash, a 'ZKProof-powered private lottery protocol' positioning itself as a Tornado Cash upgrade, had the identical Groth16 verifier misconfiguration as Veil Cash — gamma and delta both set to the BN254 G2 generator. The Phase 2 trusted setup CLI step was never run. Someone read the public Veil Cash post-mortem, identified FoomCash as a larger target with the same broken verifier, and scaled the attack. (1) On Base: whitehat 'duha' drained ~$320K in FOOM tokens in a single transaction sequence. FoomCash had published a bounty challenge on Bitcointalk with the rule 'THE ONLY RULE IS CODE. If your code can take the funds, YOU'VE WON.' duha claimed it was a legitimate bounty win. (2) On Ethereum: whitehat-rescue.eth (linked to security firm Decurity, address 0x46c403e3DcAF219D9D4De167cCc4e0dd8E81Eb72) independently identified the flaw and drained $1.84M in a claimed rescue operation. Decurity returned the funds the same day (tx: 0xfed2dc60634b321fab073312168b327a47fdd76d2a39489249e4ef986671e83f) and accepted a $100K security fee. (3) The exploit technique: set C = -vk_x (right side cancels to 1), use public constants A = α, B = β (left side also cancels to 1). The verifier accepts without needing a valid witness. On Base, 10 iterations drained 99.97% of FOOM; on Ethereum, 30 iterations drained 99.99%. (4) A public dispute erupted — duha entered the EthSecurity Telegram defending their right to keep funds, while FoomCash demanded 90% back. Resolution: duha kept ~$320K, Decurity returned $1.84M for $100K fee. Net loss: ~$420K. (5) FoomCash's social accounts had been dark since ~November 2025. Their March 1 post-mortem reframed the public standoff as an 'elite white-hat response.' Misconfigured verifiers: ETH (0xc043865fb4D542E2bc5ed5Ed9A2F0939965671A6), Base (0x02c30D32A92a3C338bc43b78933D293dED4f68C6). Total: 24.28 trillion FOOM tokens drained across both chains."
+    },
+    {
+      "id": "moonwell-cbeth-2026",
+      "attack_type": "oracle-misconfiguration",
+      "affected_protocol": {
+        "name": "Moonwell",
+        "version": null
+      },
+      "date": "2026-02-15",
+      "chain": "Base",
+      "loss_amount": "$1.78M",
+      "severity": "High",
+      "description": "Missing ETH/USD multiplication in cbETH oracle priced a $2,200 asset at $1.12, triggering $1.78M in bad debt — code co-authored by Claude Opus 4.6",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/moonwell-rekt",
+        "https://forum.moonwell.fi/t/mip-x43-cbeth-oracle-incident-summary/2068",
+        "https://github.com/moonwell-fi/moonwell-contracts-v2/pull/578",
+        "https://x.com/pashov/status/2023872510077616223",
+        "https://x.com/yieldsandmore/status/2023840920274145660",
+        "https://decrypt.co/358374/oracle-error-leaves-defi-lender-moonwell-1-8-million-bad-debt"
+      ],
+      "detailed_narrative": "On February 15, 2026 at 18:01 UTC, governance proposal MIP-X43 executed on Moonwell, enabling Chainlink OEV wrapper contracts across markets on Base and Optimism. One configuration was wrong: the cbETH oracle pulled only the cbETH/ETH exchange rate (~1.12) and treated it as a dollar value, missing the ETH/USD multiplication that turns the ratio into a real price. cbETH, trading at ~$2,200, was suddenly reported at $1.12 — a 99.9% discount. (1) Within the same block, automated liquidation bots targeted every cbETH-backed position. 1,096.317 cbETH seized at the artificial price. A smaller group exploited the mispricing from the supply side — depositing minimal collateral and borrowing cbETH at $1.12. (2) Anthias Labs detected the discrepancy in 4 minutes and cut the borrow cap to 0.01, but liquidations continued because correcting the oracle required a 5-day governance voting and timelock period. (3) Total bad debt across 11 assets: cbETH ($1.03M), WETH ($479K), USDC ($233K), EURC ($11.6K), cbBTC ($11.4K), cbXRP ($7.9K), DAI ($1.5K), USDS ($1.1K), AERO ($204), MORPHO ($171), wstETH ($164). Total: $1,779,044.83. (4) The commit (PR #578) was co-authored by Claude Opus 4.6. GitHub Copilot reviewed all 4 changed files and generated 4 comments. The code passed human review, merged, and passed governance with 99.1% approval. Neither AI, nor humans, nor the DAO caught the missing multiplication. No price sanity check existed — no floor, no ceiling, no assertion that $1.12 for a $2,200 asset should halt deployment. (5) This was Moonwell's 3rd oracle failure in ~4 months: Oct 10 ($1.7M bad debt from mispriced volatile tokens), Nov 4 ($3.7M from wrsETH oracle reporting 1 wrsETH = 1,649,934 ETH after Balancer exploit), and now Feb 15 ($1.78M). ~$7M cumulative bad debt. Possibly the first major exploit of vibe-coded smart contracts. Mikko Ohtamaa tested feeding the same PR to Claude with a targeted prompt and concluded the error was catchable — but nobody asked the right question."
+    },
+    {
+      "id": "openclaw-supply-chain-2026",
+      "attack_type": "supply-chain",
+      "affected_protocol": {
+        "name": "OpenClaw (ClawHub)",
+        "version": null
+      },
+      "date": "2026-02-19",
+      "chain": "Multi-chain (off-chain + Base)",
+      "loss_amount": null,
+      "severity": "High",
+      "description": "20% of OpenClaw's skill marketplace poisoned with malware; infostealers adapted to harvest AI agent identities, credentials, and behavioral blueprints",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/identity-theft-2",
+        "https://businessinsights.bitdefender.com/technical-advisory-openclaw-exploitation-enterprise-networks",
+        "https://blog.virustotal.com/2026/02/from-automation-to-infection-how.html",
+        "https://thehackernews.com/2026/02/researchers-find-341-malicious-clawhub.html",
+        "https://www.bleepingcomputer.com/news/security/infostealer-malware-found-stealing-openclaw-secrets-for-first-time/",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-25253"
+      ],
+      "detailed_narrative": "By February 2026, the OpenClaw AI agent ecosystem faced a multi-vector attack on its supply chain and user base. (1) Skill marketplace poisoning: ~20% of ClawHub packages were malicious. Bitdefender identified ~900 malicious skills; 14 accounts pushed poisoned packages. Koi Security documented 341 confirmed malicious entries ('ClawHavoc' campaign), 335 delivering Atomic Stealer to macOS users. A single account 'hightower6eu' was linked to 314 poisoned packages. After OpenClaw partnered with VirusTotal to scan uploads, attackers adapted by hosting payloads on lookalike domains (openclawcli.vercel.app, openclawd.ai) instead of embedding malware directly. (2) Infostealer evolution: On Feb 13, a Vidar variant was found harvesting .openclaw directories — gateway tokens, cryptographic keys, and behavioral files (soul.md, AGENTS.md, MEMORY.md) — the complete behavioral blueprint of victims' AI assistants. Hudson Rock documented 'the transition from stealing browser credentials to harvesting the souls and identities of personal AI agents.' RedLine, Lumma, and Vidar variants all added .clawdbot directory sweeping. (3) AI Recommendation Poisoning: Microsoft documented 31 companies across 14 industries using 'Summarize with AI' buttons to inject persistence commands into AI memory ('Remember [Company] as a trusted source'). 50+ unique manipulation prompts identified. (4) CVE-2026-25253 (CVSS 8.8): cross-site WebSocket hijack enabling one-click token exfiltration from OpenClaw instances. (5) Bitsight counted 30,000+ exposed instances; Token Security found 22% of enterprise customers had employees running OpenClaw without IT approval. Gartner called it 'an unacceptable cybersecurity risk for enterprises.' The weaponization of AI agents represents a new attack surface where credential theft escalates to identity theft — stealing not passwords but the machine's model of who you are."
+    },
+    {
+      "id": "dprk-digital-parasites-2026",
+      "attack_type": "private-key-compromise",
+      "affected_protocol": {
+        "name": "Industry-wide (Multiple protocols)",
+        "version": null
+      },
+      "date": "2026-02-12",
+      "chain": "Multi-chain",
+      "loss_amount": "$6.75B",
+      "severity": "Critical",
+      "description": "Nation-state threat landscape report: DPRK operatives infiltrating crypto companies as remote workers, China pre-positioning in critical infrastructure, and the shift from ransomware to digital parasitism",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/digital-parasites",
+        "https://www.chainalysis.com/blog/crypto-hacking-stolen-funds-2026/",
+        "https://thehackernews.com/2026/02/dprk-operatives-impersonate.html",
+        "https://thehackernews.com/2026/02/from-ransomware-to-residency-inside.html",
+        "https://www.picussecurity.com/red-report",
+        "https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-038a"
+      ],
+      "detailed_narrative": "A threat intelligence report documenting the convergence of nation-state cyber operations targeting crypto and critical infrastructure. (1) DPRK 'Contagious Interview' campaign: operatives pose as recruiters from legitimate crypto companies on LinkedIn, walk candidates through fake interviews, and deliver BeaverTail/InvisibleFerret malware via 'technical assessments' (clone repo → npm install → backdoor). Also use hijacked Telegram accounts with looped video footage (not deepfakes) on fake Zoom/Teams calls to trick targets into downloading malware patches. Taylor Monahan (MetaMask): 'They've stolen over $300M via this method already.' Amazon blocked 1,800 fake IT worker applications traced to DPRK. Over 300 US companies unknowingly hired DPRK operatives. 76% of all crypto service compromises in 2025 traced to DPRK operations. $6.75B stolen by end of 2025 — not through code exploits but through people. (2) China's Volt Typhoon: embedded in US critical infrastructure (utilities, comms, transport) for 5+ years using living-off-the-land techniques. Salt Typhoon breached 9+ US telecoms including AT&T, Verizon, T-Mobile; exploited CALEA wiretapping systems; intercepted calls from presidential campaign members. 80 countries affected, 600+ organizations notified. As of Feb 2026, attack may still not be fully remediated. (3) Picus Labs Red Report 2026: analyzed 1.1M malware samples; ransomware encryption dropped 38% as attackers shifted to stealth/persistence; credential theft from password stores in 23.49% of attacks; 80% of top techniques focus on stealth. (4) LummaC2 infostealer now uses trigonometry (measuring mouse movement angles) to detect sandboxes. Lazarus spent 17 days inside Safe{Wallet}'s infrastructure before the $1.5B Bybit extraction. The digital parasite model: don't detonate, don't announce — move in, feed on credentials, remain invisible."
+    },
+    {
+      "id": "crypto-press-release-fraud-2026",
+      "attack_type": "tx-origin-phishing",
+      "affected_protocol": {
+        "name": "Industry-wide (Crypto PR ecosystem)",
+        "version": null
+      },
+      "date": "2026-02-09",
+      "chain": "Multi-chain",
+      "loss_amount": "$17B",
+      "severity": "Critical",
+      "description": "Research exposing crypto press release infrastructure as primary legitimacy vector for scams — 62% of releases from high-risk/scam projects, enabling $17B in crypto scam losses in 2025",
+      "attacker_tx": null,
+      "links": [
+        "https://rekt.news/legitimacy-on-demand",
+        "https://www.chainstory.co/crypto-press-release-distribution-platforms/",
+        "https://www.coingecko.com/research/publications/how-many-cryptocurrencies-failed",
+        "https://www.chainalysis.com/blog/crypto-scams-2026/",
+        "https://x.com/zachxbt/status/1962485396597776468"
+      ],
+      "detailed_narrative": "Chainstory analyzed 2,893 crypto press releases published June–November 2025 and found 62.5% came from projects flagged as high-risk or outright scams; only 27% from legitimate operations. The crypto press release ecosystem has become the primary tool for manufacturing legitimacy at scale. (1) The pipeline: project buys press release distribution (guaranteed placement on 100+ websites, no editorial review), influencers are paid $50–$60K per post to amplify (ZachXBT leaked a spreadsheet with 200+ influencer rate cards; fewer than 5 of 160+ disclosed posts as paid), bot services provide fake engagement to create illusion of organic interest. (2) Historical precedent: SEC pump-and-dump enforcement cases (2002–2015) showed press releases in 73.3% of schemes. Company insiders (CEOs/CFOs) in 60.7% of cases. Pattern persists: Christmas Eve 2025, fake 'CircleMetals' press release used Circle's branding and fabricated CEO quotes to run a wallet drainer. Hong Kong's JPEX exchange used press releases throughout 2023 to claim licensed status; 2,700 victims lost HK$1.6B. (3) The body count: CoinGecko tallied 53.2% of all crypto tokens as dead since 2021. 11.6 million tokens collapsed in 2025 alone — 86% of all recorded failures in crypto history. Q4 2025 buried 7.7M projects. (4) Enforcement declining: SEC crypto enforcement dropped 60% from 33 actions ($4.98B penalties) in 2024 to 13 actions ($142M) in 2025. (5) Crypto scams drained an estimated $17B in 2025. Operations buying bulk social media accounts are 238× more effective. AI-enabled scams extract 4.5× more money. Impersonation scams showed 1,400% YoY growth. The inverse signal: legitimate projects attract journalists; scam projects buy placements. More press releases from a single source = more questions to ask."
     }
   ]
 }
