@@ -289,6 +289,30 @@
         "https://arxiv.org/abs/2310.01081"
       ],
       "detailed_narrative": "The attacker exploited Denaria Finance's perp-DEX PnL settlement logic using a 'Role-Play Attack' pattern (arxiv.org/abs/2310.01081), simultaneously acting as liquidity provider and trader to game the protocol's internal accounting. Attack flow: (1) Flash-loaned 60K USDC from Aave on Linea. (2) Deployed two helper contracts, A and B. (3) Helper A deposited collateral and added liquidity via addLiquidity, becoming the dominant LP in the pool. (4) Helper B deposited collateral and opened a large position against A's liquidity, shifting the AMM's internal state—the settlement engine interpreted this movement as 'earned profit' for the LP. (5) Helper A settled PnL and called removeCollateral, withdrawing far more than its original deposit. The attack was executed in two rounds: Round 1 deposited 45K USDC and withdrew 183K USDC; Round 2 deposited 15K USDC and withdrew 42K USDC. After repaying the 60K USDC flash loan, net profit was 165,617 USDC. The entire attack was atomic, executed within a single transaction."
+    },
+    {
+      "id": "aave-cow-price-impact-2026",
+      "attack_type": "slippage-deadline-missing",
+      "affected_protocol": {
+        "name": "Aave (CoW Protocol integration)",
+        "version": null
+      },
+      "date": "2026-03-12",
+      "chain": "Ethereum",
+      "loss_amount": "$50M",
+      "severity": "Critical",
+      "description": "Missing hard slippage cap in Aave's new CoW Protocol swap integration allowed a $50M collateral swap to route through a $73K SushiSwap pool, destroying 99.93% of value",
+      "attacker_tx": "0x9fa9feab3c1989a33424728c23e6de07a40a26a98ff7ff5139f3492ce430801f",
+      "links": [
+        "https://rekt.news/price-impact-kills",
+        "https://x.com/aave/status/2032959512244518962",
+        "https://x.com/CoWSwap/status/2032265762916757614",
+        "https://x.com/Ehsan1579/status/2032212032901276055",
+        "https://x.com/stanikulechov/status/2032193345414664659",
+        "https://decrypt.co/360961/crypto-trader-loses-nearly-50m-aave-trade-600k-fee-refund",
+        "https://www.coindesk.com/markets/2026/03/12/crypto-investor-turns-usd50-million-into-usd36-000-in-one-botched-move"
+      ],
+      "detailed_narrative": "On March 12, 2026, a user attempted a routine collateral rotation on Aave—swapping ~$50.4M aEthUSDT into aEthAAVE—via mobile. The trade routed through Aave's new CoW Protocol integration (which had replaced the ParaSwap-based system in December 2025). (1) A CoW solver found a path: burn aEthUSDT → withdraw $50.4M USDT from Aave → swap to 17,957 WETH via Uniswap V3's deep USDT/WETH pool (clean execution) → push all WETH into the SushiSwap AAVE/WETH pool (0xD75EA151a61d06868E31F8988D28DFE5E9df57B4). (2) The SushiSwap pool held only 331.63 AAVE + 17.65 WETH (~$74K total liquidity). The trade pushed 17,957 WETH into a pool holding 17.65 WETH—1,017× the pool's entire reserve. (3) The AMM surrendered nearly all AAVE inventory: output was 327.24 AAVE (~$36K). The signed minimum buy amount was already 324.94 AAVE—the catastrophic route was baked in before settlement. Auto-slippage was 1.21%, meaningless on a 99% price-impact trade. (4) The interface showed warnings and required a confirmation checkbox; the user confirmed on mobile. (5) Value extraction cascade within the same block: an MEV bot backran (not sandwiched) the AAVE/WETH and USDT/WETH legs for ~$12.5M profit (harvest tx: 0x45388b0f9ff46ffe98a3124c22ab1db2b1764ecb3b61234e29e5c9732b7fd4ab), paying 13,087 ETH (~$30.2M) to Titan Builder; Titan's total block revenue was ~$34.3M; Lido (block proposer) received 568 ETH (~$1.2M); DEX LPs absorbed ~$3.5M passively. (6) Root cause: when Aave Labs replaced ParaSwap with CoW in December 2025, the old hard slippage cap (~30%) was not carried over. The teams who built the original protection (BGD Labs, ACI) were not consulted. DefiLlama's free LlamaSwap tool would have blocked the same trade entirely. (7) Aftermath: Aave returned $110,368 in collected fees and introduced 'Aave Shield' (25% price-impact hard block, on by default). CoW DAO refunded its fees and disclosed compounding failures: a stale hardcoded gas ceiling had rejected better solver quotes, a winning solver abandoned the order after two failed on-chain submissions, and the private RPC transaction showed evidence of mempool leakage (investigation ongoing). CoW also noted that even the best quotes implied ~90% loss on a $50M fill-or-kill order on an illiquid pair. The incident occurred days after a separate Aave misconfiguration (CAPO oracle) triggered $27.78M in wrongful wstETH liquidations on March 10. Community poll split blame: ~41% user, ~44% frontend, ~15% protocol."
     }
   ]
 }
