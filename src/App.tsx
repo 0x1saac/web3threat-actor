@@ -215,6 +215,20 @@ export default function App() {
               : <p className="text-sm text-neutral-500 italic">No detailed narrative available yet.</p>
             }
           </div>
+          {Array.isArray(exploit.links) && exploit.links.length > 1 && (
+            <div className="bg-neutral-800/50 p-5 rounded-xl border border-neutral-700/50">
+              <h4 className="font-bold text-white mb-3 text-sm uppercase tracking-wide">References</h4>
+              <ol className="list-decimal list-inside flex flex-col gap-1.5">
+                {exploit.links.slice(1).map((link: string, i: number) => (
+                  <li key={i} className="text-sm text-neutral-400">
+                    <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all">
+                      {link.replace(/^https?:\/\//, '').split('/').slice(0, 2).join('/')}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       )
     };
