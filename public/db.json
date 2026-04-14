@@ -486,6 +486,25 @@
         "https://x.com/zachxbt/status/1962485396597776468"
       ],
       "detailed_narrative": "Chainstory analyzed 2,893 crypto press releases published June–November 2025 and found 62.5% came from projects flagged as high-risk or outright scams; only 27% from legitimate operations. The crypto press release ecosystem has become the primary tool for manufacturing legitimacy at scale. (1) The pipeline: project buys press release distribution (guaranteed placement on 100+ websites, no editorial review), influencers are paid $50–$60K per post to amplify (ZachXBT leaked a spreadsheet with 200+ influencer rate cards; fewer than 5 of 160+ disclosed posts as paid), bot services provide fake engagement to create illusion of organic interest. (2) Historical precedent: SEC pump-and-dump enforcement cases (2002–2015) showed press releases in 73.3% of schemes. Company insiders (CEOs/CFOs) in 60.7% of cases. Pattern persists: Christmas Eve 2025, fake 'CircleMetals' press release used Circle's branding and fabricated CEO quotes to run a wallet drainer. Hong Kong's JPEX exchange used press releases throughout 2023 to claim licensed status; 2,700 victims lost HK$1.6B. (3) The body count: CoinGecko tallied 53.2% of all crypto tokens as dead since 2021. 11.6 million tokens collapsed in 2025 alone — 86% of all recorded failures in crypto history. Q4 2025 buried 7.7M projects. (4) Enforcement declining: SEC crypto enforcement dropped 60% from 33 actions ($4.98B penalties) in 2024 to 13 actions ($142M) in 2025. (5) Crypto scams drained an estimated $17B in 2025. Operations buying bulk social media accounts are 238× more effective. AI-enabled scams extract 4.5× more money. Impersonation scams showed 1,400% YoY growth. The inverse signal: legitimate projects attract journalists; scam projects buy placements. More press releases from a single source = more questions to ask."
+    },
+    {
+      "id": "hyperbridge-dot-2026",
+      "attack_type": "cross-chain-bridge-exploit",
+      "affected_protocol": {
+        "name": "Hyperbridge (Polkadot bridge)",
+        "version": null
+      },
+      "date": "2026-04-13",
+      "chain": "Ethereum",
+      "loss_amount": "$237K",
+      "severity": "Medium",
+      "description": "Forged cross-chain messages exploited a Hyperbridge validation flaw to seize admin control and mint 1B unbacked DOT on Ethereum",
+      "attacker_tx": "0x240aeb9a8b2aabf64ed8e1e480d3e7be140cf530dc1e5606cb16671029401109",
+      "links": [
+        "https://metaadvisor.eu/news/hacker-minted-billion-polkadot-tokens-ethereum-250000/",
+        "https://etherscan.io/tx/0x240aeb9a8b2aabf64ed8e1e480d3e7be140cf530dc1e5606cb16671029401109"
+      ],
+      "detailed_narrative": "On April 13, 2026, an attacker exploited a validation flaw in Hyperbridge — a cross-chain bridge connecting Polkadot and Ethereum — to mint 1 billion DOT tokens on Ethereum and extract approximately $237K. Polkadot itself was not compromised; the vulnerability was confined to bridge infrastructure. (1) The attacker submitted a forged cross-chain message through Hyperbridge's verification system. Due to missing or bypassed validation checks, the system accepted the fabricated message as a legitimate cross-chain payload. (2) The forged message allowed the attacker to change administrator rights in the smart contract controlling DOT tokens on Ethereum, granting full control over token minting. (3) With admin privileges, the attacker minted 1 billion DOT on Ethereum — nominally worth over $1B but entirely unbacked by any locked assets on Polkadot. (4) The attacker attempted to dump the minted tokens on DEXes, but market liquidity was insufficient to absorb such volume. The massive sell pressure caused an immediate price collapse, and only ~$237K in ETH was successfully extracted. (5) The incident demonstrates the persistent gap between technical capability and economic reality in bridge exploits: creating billions in tokens is meaningless without market depth and buyer trust to convert them."
     }
   ]
 }
