@@ -5,6 +5,7 @@ import { Spotlight } from "./components/ui/spotlight";
 import { ExpandableCard } from "./components/ui/expandable-card";
 import { ThreatBubbleChart } from "./components/ui/threat-bubble-chart";
 import { Search, Filter, ChevronDown, Flame } from "lucide-react";
+import { generateThumbnail } from "./lib/utils";
 
 function formatNarrative(text: string) {
   // Split on numbered steps like (1), (2), etc.
@@ -194,12 +195,19 @@ export default function App() {
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const expandCardsData = filteredExploits.map(exploit => {
+    const attackType = data.attack_types.find(t => t.id === exploit.attack_type);
+    const category = attackType?.category || "Unknown";
+    const thumbnail = exploit.thumbnail
+      || generateThumbnail(exploit.affected_protocol.name, category);
     return {
       id: exploit.id,
       title: exploit.affected_protocol.name,
       description: exploit.description,
       tag: exploit.severity,
       date: exploit.date,
+      src: thumbnail,
+      attackVector: attackType?.name || exploit.attack_type,
+      loss: exploit.loss_amount,
       ctaText: "View Post-Mortem",
       ctaLink: typeof exploit.links === 'string' ? exploit.links : (exploit.links && exploit.links[0] ? exploit.links[0] : "#"),
       content: () => (

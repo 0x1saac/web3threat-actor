@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../../hooks/use-outside-click";
+import { buildShareUrl } from "../../lib/utils";
 
 function severityClasses(tag: string) {
   switch (tag) {
@@ -31,6 +32,8 @@ export function ExpandableCard({
     subtitle?: string;
     tag?: string;
     date?: string;
+    attackVector?: string;
+    loss?: string | null;
   }[];
 }) {
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
@@ -38,6 +41,37 @@ export function ExpandableCard({
   );
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
+
+  // Deep linking: open the card matching #exploit-{id} on mount,
+  // and keep the URL hash in sync as the user opens/closes cards.
+  useEffect(() => {
+    const hash = window.location.hash;
+    const match = hash.match(/^#exploit-(.+)$/);
+    if (!match) return;
+    const target = cards.find((c) => c.id === match[1]);
+    if (target) setActive(target);
+    // Run only once on mount; subsequent filter changes shouldn't reopen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (active && typeof active === "object") {
+      const newHash = `#exploit-${active.id}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search + newHash
+        );
+      }
+    } else if (window.location.hash.startsWith("#exploit-")) {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+  }, [active]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -87,7 +121,7 @@ export function ExpandableCard({
                       height={200}
                       src={active.src}
                       alt={active.title}
-                      className="w-full h-80 lg:h-80 sm:rounded-tr-lg sm:rounded-tl-lg object-cover object-top"
+                      className="w-full h-80 lg:h-80 sm:rounded-tr-lg sm:rounded-tl-lg object-contain bg-neutral-950"
                     />
                   </motion.div>
                 )}
@@ -110,16 +144,37 @@ export function ExpandableCard({
                     </motion.p>
                   </div>
 
-                  {active.ctaLink && (
+                  <div className="flex items-center flex-shrink-0">
+                    {active.ctaLink && (
+                      <a
+                        href={active.ctaLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 text-sm rounded-full font-bold border border-neutral-600 text-neutral-300 hover:bg-neutral-800 transition-colors"
+                      >
+                        {active.ctaText}
+                      </a>
+                    )}
                     <a
-                      href={active.ctaLink}
+                      href={buildShareUrl({
+                        title: active.title,
+                        loss: active.loss,
+                        date: active.date,
+                        attackVector: active.attackVector,
+                        exploitId: active.id,
+                      })}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 text-sm rounded-full font-bold border border-neutral-600 text-neutral-300 hover:bg-neutral-800 transition-colors flex-shrink-0"
+                      aria-label="Share on X"
+                      title="Share on X"
+                      className="ml-2 inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-full font-bold border border-neutral-600 text-neutral-300 hover:bg-neutral-800 transition-colors"
                     >
-                      {active.ctaText}
+                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 fill-current">
+                        <path d="M18.244 2H21l-6.52 7.45L22 22h-6.79l-4.78-6.24L4.8 22H2.04l6.97-7.96L2 2h6.91l4.32 5.71L18.244 2zm-2.38 18h1.88L7.21 4H5.21l10.65 16z" />
+                      </svg>
+                      Share
                     </a>
-                  )}
+                  </div>
                 </div>
                 <div className="pt-4">
                   <motion.div
@@ -148,6 +203,21 @@ export function ExpandableCard({
             className="p-4 flex flex-col w-full bg-neutral-900 border-neutral-800 rounded-2xl hover:bg-neutral-800 cursor-pointer border transition-colors shadow-none"
           >
             <div className="flex flex-col w-full h-full justify-between">
+              {card.src && (
+                <motion.div
+                  layoutId={`image-${card.title}-${id}`}
+                  className="mb-3 -mx-1 -mt-1 overflow-hidden rounded-xl"
+                >
+                  <img
+                    src={card.src}
+                    alt={card.title}
+                    width={400}
+                    height={160}
+                    loading="lazy"
+                    className="w-full h-28 object-contain bg-neutral-950"
+                  />
+                </motion.div>
+              )}
               <div className="flex flex-col">
                 <div className="flex justify-between items-center mb-2">
                   {card.tag && (

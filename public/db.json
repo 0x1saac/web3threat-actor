@@ -159,6 +159,7 @@
     {
       "id": "bybit-2025",
       "attack_type": "supply-chain",
+      "thumbnail": "/public/thumbnails/bybit.png",
       "affected_protocol": {
         "name": "Bybit",
         "version": null
@@ -178,6 +179,7 @@
     {
       "id": "crosscurve-2026",
       "attack_type": "access-control-missing",
+      "thumbnail": "/public/thumbnails/crosscurve.png",
       "affected_protocol": {
         "name": "CrossCurve",
         "version": "v1.0"
@@ -196,6 +198,7 @@
     {
       "id": "truebit-2026",
       "attack_type": "integer-overflow-underflow",
+      "thumbnail": "/public/thumbnails/truebit.png",
       "affected_protocol": {
         "name": "Truebit",
         "version": "v1.0"
@@ -234,6 +237,7 @@
     {
       "id": "iotex-iotube-2026",
       "attack_type": "cross-chain-bridge-exploit",
+      "thumbnail": "/public/thumbnails/iotex.png",
       "affected_protocol": {
         "name": "IoTeX ioTube",
         "version": "v1.0"
@@ -252,6 +256,7 @@
     {
       "id": "drift-protocol-2026",
       "attack_type": "private-key-compromise",
+      "thumbnail": "/public/thumbnails/drift.png",
       "affected_protocol": {
         "name": "Drift Protocol",
         "version": "v2.0"
@@ -270,6 +275,7 @@
     {
       "id": "venus-protocol-2026",
       "attack_type": "price-oracle-manipulation",
+      "thumbnail": "/public/thumbnails/venus.png",
       "affected_protocol": {
         "name": "Venus Protocol",
         "version": null
@@ -288,6 +294,7 @@
     {
       "id": "denaria-finance-2026",
       "attack_type": "role-play-attack",
+      "thumbnail": "/public/thumbnails/denaria.png",
       "affected_protocol": {
         "name": "Denaria Finance",
         "version": null
@@ -307,6 +314,7 @@
     {
       "id": "aave-cow-price-impact-2026",
       "attack_type": "slippage-deadline-missing",
+      "thumbnail": "/public/thumbnails/aave.png",
       "affected_protocol": {
         "name": "Aave (CoW Protocol integration)",
         "version": null
@@ -331,6 +339,7 @@
     {
       "id": "aave-capo-oracle-2026",
       "attack_type": "oracle-misconfiguration",
+      "thumbnail": "/public/thumbnails/aave.png",
       "affected_protocol": {
         "name": "Aave",
         "version": "v3"
@@ -355,6 +364,7 @@
     {
       "id": "veil-cash-2026",
       "attack_type": "zk-proof-misconfiguration",
+      "thumbnail": "/public/thumbnails/veil.png",
       "affected_protocol": {
         "name": "Veil Cash",
         "version": null
@@ -376,6 +386,7 @@
     {
       "id": "foomcash-2026",
       "attack_type": "zk-proof-misconfiguration",
+      "thumbnail": "/public/thumbnails/foomcash.png",
       "affected_protocol": {
         "name": "FoomCash",
         "version": null
@@ -399,6 +410,7 @@
     {
       "id": "moonwell-cbeth-2026",
       "attack_type": "oracle-misconfiguration",
+      "thumbnail": "/public/thumbnails/moonwell.png",
       "affected_protocol": {
         "name": "Moonwell",
         "version": null
@@ -418,29 +430,6 @@
         "https://decrypt.co/358374/oracle-error-leaves-defi-lender-moonwell-1-8-million-bad-debt"
       ],
       "detailed_narrative": "On February 15, 2026 at 18:01 UTC, governance proposal MIP-X43 executed on Moonwell, enabling Chainlink OEV wrapper contracts across markets on Base and Optimism. One configuration was wrong: the cbETH oracle pulled only the cbETH/ETH exchange rate (~1.12) and treated it as a dollar value, missing the ETH/USD multiplication that turns the ratio into a real price. cbETH, trading at ~$2,200, was suddenly reported at $1.12 — a 99.9% discount. (1) Within the same block, automated liquidation bots targeted every cbETH-backed position. 1,096.317 cbETH seized at the artificial price. A smaller group exploited the mispricing from the supply side — depositing minimal collateral and borrowing cbETH at $1.12. (2) Anthias Labs detected the discrepancy in 4 minutes and cut the borrow cap to 0.01, but liquidations continued because correcting the oracle required a 5-day governance voting and timelock period. (3) Total bad debt across 11 assets: cbETH ($1.03M), WETH ($479K), USDC ($233K), EURC ($11.6K), cbBTC ($11.4K), cbXRP ($7.9K), DAI ($1.5K), USDS ($1.1K), AERO ($204), MORPHO ($171), wstETH ($164). Total: $1,779,044.83. (4) The commit (PR #578) was co-authored by Claude Opus 4.6. GitHub Copilot reviewed all 4 changed files and generated 4 comments. The code passed human review, merged, and passed governance with 99.1% approval. Neither AI, nor humans, nor the DAO caught the missing multiplication. No price sanity check existed — no floor, no ceiling, no assertion that $1.12 for a $2,200 asset should halt deployment. (5) This was Moonwell's 3rd oracle failure in ~4 months: Oct 10 ($1.7M bad debt from mispriced volatile tokens), Nov 4 ($3.7M from wrsETH oracle reporting 1 wrsETH = 1,649,934 ETH after Balancer exploit), and now Feb 15 ($1.78M). ~$7M cumulative bad debt. Possibly the first major exploit of vibe-coded smart contracts. Mikko Ohtamaa tested feeding the same PR to Claude with a targeted prompt and concluded the error was catchable — but nobody asked the right question."
-    },
-    {
-      "id": "openclaw-supply-chain-2026",
-      "attack_type": "supply-chain",
-      "affected_protocol": {
-        "name": "OpenClaw (ClawHub)",
-        "version": null
-      },
-      "date": "2026-02-19",
-      "chain": "Multi-chain (off-chain + Base)",
-      "loss_amount": null,
-      "severity": "High",
-      "description": "20% of OpenClaw's skill marketplace poisoned with malware; infostealers adapted to harvest AI agent identities, credentials, and behavioral blueprints",
-      "attacker_tx": null,
-      "links": [
-        "https://rekt.news/identity-theft-2",
-        "https://businessinsights.bitdefender.com/technical-advisory-openclaw-exploitation-enterprise-networks",
-        "https://blog.virustotal.com/2026/02/from-automation-to-infection-how.html",
-        "https://thehackernews.com/2026/02/researchers-find-341-malicious-clawhub.html",
-        "https://www.bleepingcomputer.com/news/security/infostealer-malware-found-stealing-openclaw-secrets-for-first-time/",
-        "https://nvd.nist.gov/vuln/detail/CVE-2026-25253"
-      ],
-      "detailed_narrative": "By February 2026, the OpenClaw AI agent ecosystem faced a multi-vector attack on its supply chain and user base. (1) Skill marketplace poisoning: ~20% of ClawHub packages were malicious. Bitdefender identified ~900 malicious skills; 14 accounts pushed poisoned packages. Koi Security documented 341 confirmed malicious entries ('ClawHavoc' campaign), 335 delivering Atomic Stealer to macOS users. A single account 'hightower6eu' was linked to 314 poisoned packages. After OpenClaw partnered with VirusTotal to scan uploads, attackers adapted by hosting payloads on lookalike domains (openclawcli.vercel.app, openclawd.ai) instead of embedding malware directly. (2) Infostealer evolution: On Feb 13, a Vidar variant was found harvesting .openclaw directories — gateway tokens, cryptographic keys, and behavioral files (soul.md, AGENTS.md, MEMORY.md) — the complete behavioral blueprint of victims' AI assistants. Hudson Rock documented 'the transition from stealing browser credentials to harvesting the souls and identities of personal AI agents.' RedLine, Lumma, and Vidar variants all added .clawdbot directory sweeping. (3) AI Recommendation Poisoning: Microsoft documented 31 companies across 14 industries using 'Summarize with AI' buttons to inject persistence commands into AI memory ('Remember [Company] as a trusted source'). 50+ unique manipulation prompts identified. (4) CVE-2026-25253 (CVSS 8.8): cross-site WebSocket hijack enabling one-click token exfiltration from OpenClaw instances. (5) Bitsight counted 30,000+ exposed instances; Token Security found 22% of enterprise customers had employees running OpenClaw without IT approval. Gartner called it 'an unacceptable cybersecurity risk for enterprises.' The weaponization of AI agents represents a new attack surface where credential theft escalates to identity theft — stealing not passwords but the machine's model of who you are."
     },
     {
       "id": "dprk-digital-parasites-2026",
@@ -490,6 +479,7 @@
     {
       "id": "hyperbridge-dot-2026",
       "attack_type": "cross-chain-bridge-exploit",
+      "thumbnail": "/public/thumbnails/hyperbridge.png",
       "affected_protocol": {
         "name": "Hyperbridge (Polkadot bridge)",
         "version": null
