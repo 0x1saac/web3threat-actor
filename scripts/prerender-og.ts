@@ -57,7 +57,7 @@ function main() {
     const attackType = db.attack_types.find(
       (t) => t.id === exploit.attack_type
     );
-    const title = `${exploit.affected_protocol.name} — ${attackType?.name || exploit.attack_type} Exploit`;
+    const title = `${exploit.affected_protocol.name} — ${attackType?.name || exploit.attack_type}`;
     const description = exploit.description;
     const url = `${SITE_URL}/exploit/${exploit.id}`;
 
@@ -66,7 +66,7 @@ function main() {
     // OG images, so we use a static site logo instead).
     const image = exploit.thumbnail
       ? `${SITE_URL}${exploit.thumbnail}`
-      : `${SITE_URL}/og-default.svg`;
+      : `${SITE_URL}/favicon.png`;
 
     const metaTags = [
       // Open Graph
@@ -83,7 +83,12 @@ function main() {
       `<meta name="twitter:image" content="${escapeHtml(image)}" />`,
     ].join("\n    ");
 
-    const html = template
+    // Strip existing homepage OG / Twitter meta tags so crawlers only see
+    // the exploit-specific ones we inject below.
+    const stripped = template
+      .replace(/<meta\s+(?:property="og:|name="twitter:)[^>]*\/>\s*\n?/g, "");
+
+    const html = stripped
       .replace(
         "<title>web3threat.actor</title>",
         `<title>${escapeHtml(title)} | web3threat.actor</title>\n    ${metaTags}`
