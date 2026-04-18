@@ -54,7 +54,6 @@ export function buildShareUrl(opts: {
   date?: string;
   attackVector?: string;
   exploitId: string;
-  pageUrl?: string;
 }): string {
   const dateStr = opts.date
     ? new Date(opts.date).toLocaleDateString(undefined, { year: "numeric", month: "short" })
@@ -63,10 +62,6 @@ export function buildShareUrl(opts: {
   const vectorPart = opts.attackVector ? ` ${opts.attackVector}` : "";
   const datePart = dateStr ? ` (${dateStr})` : "";
   const text = `${lossPart}${opts.title}${vectorPart} exploit${datePart} — via web3threat.actor`;
-  const base = opts.pageUrl
-    ?? (typeof window !== "undefined"
-      ? `${window.location.origin}`
-      : "");
-  const url = `${base}/exploit/${opts.exploitId}`;
+  const url = `https://web3threat.actor/exploit/${opts.exploitId}`;
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 }
