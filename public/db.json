@@ -159,7 +159,7 @@
     {
       "id": "bybit-2025",
       "attack_type": "supply-chain",
-      "thumbnail": "/public/thumbnails/bybit.png",
+      "thumbnail": "/thumbnails/bybit.png",
       "affected_protocol": {
         "name": "Bybit",
         "version": null
@@ -179,7 +179,7 @@
     {
       "id": "crosscurve-2026",
       "attack_type": "access-control-missing",
-      "thumbnail": "/public/thumbnails/crosscurve.png",
+      "thumbnail": "/thumbnails/crosscurve.png",
       "affected_protocol": {
         "name": "CrossCurve",
         "version": "v1.0"
@@ -198,7 +198,7 @@
     {
       "id": "truebit-2026",
       "attack_type": "integer-overflow-underflow",
-      "thumbnail": "/public/thumbnails/truebit.png",
+      "thumbnail": "/thumbnails/truebit.png",
       "affected_protocol": {
         "name": "Truebit",
         "version": "v1.0"
@@ -237,7 +237,7 @@
     {
       "id": "iotex-iotube-2026",
       "attack_type": "cross-chain-bridge-exploit",
-      "thumbnail": "/public/thumbnails/iotex.png",
+      "thumbnail": "/thumbnails/iotex.png",
       "affected_protocol": {
         "name": "IoTeX ioTube",
         "version": "v1.0"
@@ -256,7 +256,7 @@
     {
       "id": "drift-protocol-2026",
       "attack_type": "private-key-compromise",
-      "thumbnail": "/public/thumbnails/drift.png",
+      "thumbnail": "/thumbnails/drift.png",
       "affected_protocol": {
         "name": "Drift Protocol",
         "version": "v2.0"
@@ -275,7 +275,7 @@
     {
       "id": "venus-protocol-2026",
       "attack_type": "price-oracle-manipulation",
-      "thumbnail": "/public/thumbnails/venus.png",
+      "thumbnail": "/thumbnails/venus.png",
       "affected_protocol": {
         "name": "Venus Protocol",
         "version": null
@@ -294,7 +294,7 @@
     {
       "id": "denaria-finance-2026",
       "attack_type": "role-play-attack",
-      "thumbnail": "/public/thumbnails/denaria.png",
+      "thumbnail": "/thumbnails/denaria.png",
       "affected_protocol": {
         "name": "Denaria Finance",
         "version": null
@@ -314,7 +314,7 @@
     {
       "id": "aave-cow-price-impact-2026",
       "attack_type": "slippage-deadline-missing",
-      "thumbnail": "/public/thumbnails/aave.png",
+      "thumbnail": "/thumbnails/aave.png",
       "affected_protocol": {
         "name": "Aave (CoW Protocol integration)",
         "version": null
@@ -339,7 +339,7 @@
     {
       "id": "aave-capo-oracle-2026",
       "attack_type": "oracle-misconfiguration",
-      "thumbnail": "/public/thumbnails/aave.png",
+      "thumbnail": "/thumbnails/aave.png",
       "affected_protocol": {
         "name": "Aave",
         "version": "v3"
@@ -364,7 +364,7 @@
     {
       "id": "veil-cash-2026",
       "attack_type": "zk-proof-misconfiguration",
-      "thumbnail": "/public/thumbnails/veil.png",
+      "thumbnail": "/thumbnails/veil.png",
       "affected_protocol": {
         "name": "Veil Cash",
         "version": null
@@ -386,7 +386,7 @@
     {
       "id": "foomcash-2026",
       "attack_type": "zk-proof-misconfiguration",
-      "thumbnail": "/public/thumbnails/foomcash.png",
+      "thumbnail": "/thumbnails/foomcash.png",
       "affected_protocol": {
         "name": "FoomCash",
         "version": null
@@ -410,7 +410,7 @@
     {
       "id": "moonwell-cbeth-2026",
       "attack_type": "oracle-misconfiguration",
-      "thumbnail": "/public/thumbnails/moonwell.png",
+      "thumbnail": "/thumbnails/moonwell.png",
       "affected_protocol": {
         "name": "Moonwell",
         "version": null
@@ -479,7 +479,7 @@
     {
       "id": "hyperbridge-dot-2026",
       "attack_type": "cross-chain-bridge-exploit",
-      "thumbnail": "/public/thumbnails/hyperbridge.png",
+      "thumbnail": "/thumbnails/hyperbridge.png",
       "affected_protocol": {
         "name": "Hyperbridge (Polkadot bridge)",
         "version": null
