@@ -65,8 +65,8 @@ export function buildShareUrl(opts: {
   const text = `${lossPart}${opts.title}${vectorPart} exploit${datePart} — via web3threat.actor`;
   const base = opts.pageUrl
     ?? (typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}`
+      ? `${window.location.origin}`
       : "");
-  const url = `${base}#exploit-${opts.exploitId}`;
+  const url = `${base}/exploit/${opts.exploitId}`;
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 }

@@ -6,6 +6,7 @@ import { ExpandableCard } from "./components/ui/expandable-card";
 import { ThreatBubbleChart } from "./components/ui/threat-bubble-chart";
 import { Search, Filter, ChevronDown, Flame } from "lucide-react";
 import { generateThumbnail } from "./lib/utils";
+import { useParams } from "react-router-dom";
 
 function formatNarrative(text: string) {
   // Split on numbered steps like (1), (2), etc.
@@ -123,6 +124,7 @@ function useCountUp(end: number, duration = 1500) {
 }
 
 export default function App() {
+  const { exploitId } = useParams<{ exploitId: string }>();
   const [data, setData] = useState<ExploitDB | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -377,7 +379,7 @@ export default function App() {
           </div>
 
           <div className="max-w-7xl mx-auto py-0">
-             <ExpandableCard cards={expandCardsData} />
+             <ExpandableCard cards={expandCardsData} activeExploitId={exploitId} />
           </div>
         </div>
       </main>

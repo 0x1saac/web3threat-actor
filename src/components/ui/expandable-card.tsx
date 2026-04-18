@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 import { buildShareUrl } from "../../lib/utils";
 
@@ -20,6 +21,7 @@ function severityClasses(tag: string) {
 
 export function ExpandableCard({
   cards,
+  activeExploitId,
 }: {
   cards: {
     id: string;
@@ -35,48 +37,38 @@ export function ExpandableCard({
     attackVector?: string;
     loss?: string | null;
   }[];
+  activeExploitId?: string;
 }) {
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
     null
   );
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  // Deep linking: open the card matching #exploit-{id} on mount,
-  // and keep the URL hash in sync as the user opens/closes cards.
+  // Deep linking: open the card matching the route param on mount.
   useEffect(() => {
-    const hash = window.location.hash;
-    const match = hash.match(/^#exploit-(.+)$/);
-    if (!match) return;
-    const target = cards.find((c) => c.id === match[1]);
+    if (!activeExploitId) return;
+    const target = cards.find((c) => c.id === activeExploitId);
     if (target) setActive(target);
-    // Run only once on mount; subsequent filter changes shouldn't reopen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeExploitId]);
 
-  useEffect(() => {
-    if (active && typeof active === "object") {
-      const newHash = `#exploit-${active.id}`;
-      if (window.location.hash !== newHash) {
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + window.location.search + newHash
-        );
-      }
-    } else if (window.location.hash.startsWith("#exploit-")) {
-      window.history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search
-      );
-    }
-  }, [active]);
+  // Keep URL in sync when user opens/closes cards.
+  const handleOpen = (card: (typeof cards)[number]) => {
+    setActive(card);
+    navigate(`/exploit/${card.id}`, { replace: true });
+  };
+
+  const handleClose = () => {
+    setActive(null);
+    navigate("/", { replace: true });
+  };
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setActive(false);
+        handleClose();
       }
     }
 
@@ -90,7 +82,7 @@ export function ExpandableCard({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [active]);
 
-  useOutsideClick(ref as React.RefObject<HTMLDivElement>, () => setActive(null));
+  useOutsideClick(ref as React.RefObject<HTMLDivElement>, () => handleClose());
 
   return (
     <>
@@ -199,7 +191,7 @@ export function ExpandableCard({
           <motion.div
             layoutId={`card-${card.title}-${id}`}
             key={card.title}
-            onClick={() => setActive(card)}
+            onClick={() => handleOpen(card)}
             className="p-4 flex flex-col w-full bg-neutral-900 border-neutral-800 rounded-2xl hover:bg-neutral-800 cursor-pointer border transition-colors shadow-none"
           >
             <div className="flex flex-col w-full h-full justify-between">
