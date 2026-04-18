@@ -3,7 +3,8 @@ import type { ExploitDB } from "./data";
 import { BentoGrid, BentoGridItem } from "./components/ui/bento-grid";
 import { Spotlight } from "./components/ui/spotlight";
 import { ExpandableCard } from "./components/ui/expandable-card";
-import { DollarSign, Skull, Zap, Database, Search, Filter, ChevronDown, Flame } from "lucide-react";
+import { ThreatBubbleChart } from "./components/ui/threat-bubble-chart";
+import { Search, Filter, ChevronDown, Flame } from "lucide-react";
 
 function formatNarrative(text: string) {
   // Split on numbered steps like (1), (2), etc.
@@ -134,7 +135,24 @@ export default function App() {
       .catch(() => setLoading(false));
   }, []);
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  // Disable browser scroll restoration and force top on first paint AND after data loads
+  // (the page is much taller after data renders, which is when the browser tries to "restore").
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      // Strip any hash the browser may have used to jump to an anchor.
+      if (window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      window.scrollTo(0, 0);
+    }
+  }, [loading]);
 
   const totalLossM = data ? data.exploits.reduce((acc, curr) => {
     if (!curr.loss_amount) return acc;
@@ -251,45 +269,56 @@ export default function App() {
           </h1>
         </div>
 
-        {/* Stats Bento Grid */}
+        {/* Threat Landscape Overview */}
         <div className="mb-32 relative z-10">
-          <h2 className="text-2xl font-bold text-white mb-8 px-4 font-saira">Overview</h2>
-          <BentoGrid className="w-full">
-            <BentoGridItem
-              title="Total Value Lost"
-              description="Across tracked major exploits"
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 flex items-center justify-center"><span ref={totalLossCounter.ref} className="text-3xl font-bold text-red-400 font-geom">${(totalLossCounter.value / 10).toFixed(1)}B+</span></div>}
-              icon={<DollarSign className="h-4 w-4 text-neutral-500" />}
-              className="md:col-span-2"
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 px-4 gap-2">
+            <div>
+              <h2 className="text-2xl font-bold text-white font-saira">Threat Landscape</h2>
+              <p className="text-sm text-neutral-500 mt-1">Each bubble is an attack vector — sized by total losses, colored by category.</p>
+            </div>
+          </div>
+
+          {/* KPI ribbon */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 px-4">
+            <div className="rounded-xl border border-neutral-800/80 bg-neutral-950/60 px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-neutral-500">Total value lost</div>
+              <div className="mt-1 text-2xl font-bold font-geom text-red-400">
+                <span ref={totalLossCounter.ref}>${(totalLossCounter.value / 10).toFixed(1)}B+</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-neutral-800/80 bg-neutral-950/60 px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-neutral-500">Critical incidents</div>
+              <div className="mt-1 text-2xl font-bold font-geom text-purple-400">
+                <span ref={criticalCounter.ref}>{criticalCounter.value}</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-neutral-800/80 bg-neutral-950/60 px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-neutral-500">Attack vectors</div>
+              <div className="mt-1 text-2xl font-bold font-geom text-blue-400">
+                <span ref={vectorsCounter.ref}>{vectorsCounter.value}</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-neutral-800/80 bg-neutral-950/60 px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-neutral-500">Categories</div>
+              <div className="mt-1 text-2xl font-bold font-geom text-emerald-400">
+                <span ref={categoriesCounter.ref}>{categoriesCounter.value}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4">
+            <ThreatBubbleChart
+              attackTypes={data.attack_types}
+              exploits={data.exploits}
             />
-            <BentoGridItem
-              title="Critical Exploits"
-              description={`${criticalExploits} severe incidents recorded`}
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center"><span ref={criticalCounter.ref} className="text-3xl font-bold text-purple-400 font-geom">{criticalCounter.value}</span></div>}
-              icon={<Skull className="h-4 w-4 text-neutral-500" />}
-              className="md:col-span-1"
-            />
-            <BentoGridItem
-              title="Attack Vectors"
-              description={`${data.attack_types.length} distinct vulnerability types`}
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center"><span ref={vectorsCounter.ref} className="text-3xl font-bold text-blue-400 font-geom">{vectorsCounter.value}</span></div>}
-              icon={<Zap className="h-4 w-4 text-neutral-500" />}
-              className="md:col-span-1"
-            />
-            <BentoGridItem
-              title="Categories"
-              description={`${categoriesCount} main threat categories`}
-              header={<div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center"><span ref={categoriesCounter.ref} className="text-3xl font-bold text-emerald-400 font-geom">{categoriesCounter.value}</span></div>}
-              icon={<Database className="h-4 w-4 text-neutral-500" />}
-              className="md:col-span-2"
-            />
-          </BentoGrid>
+          </div>
         </div>
 
         {/* Exploits - Bento Grid */}
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-white mb-8 px-4 text-center md:text-left font-saira">Historical Exploits</h2>
-          
+          <div className="mb-8 px-4 text-center md:text-left">
+            <h2 className="text-2xl font-bold text-white font-saira">Historical Exploits</h2>
+          </div>
           <div className="max-w-7xl mx-auto mb-8 px-4 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:w-1/3">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
