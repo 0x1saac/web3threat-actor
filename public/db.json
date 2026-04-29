@@ -495,6 +495,24 @@
         "https://etherscan.io/tx/0x240aeb9a8b2aabf64ed8e1e480d3e7be140cf530dc1e5606cb16671029401109"
       ],
       "detailed_narrative": "On April 13, 2026, an attacker exploited a validation flaw in Hyperbridge — a cross-chain bridge connecting Polkadot and Ethereum — to mint 1 billion DOT tokens on Ethereum and extract approximately $237K. Polkadot itself was not compromised; the vulnerability was confined to bridge infrastructure. (1) The attacker submitted a forged cross-chain message through Hyperbridge's verification system. Due to missing or bypassed validation checks, the system accepted the fabricated message as a legitimate cross-chain payload. (2) The forged message allowed the attacker to change administrator rights in the smart contract controlling DOT tokens on Ethereum, granting full control over token minting. (3) With admin privileges, the attacker minted 1 billion DOT on Ethereum — nominally worth over $1B but entirely unbacked by any locked assets on Polkadot. (4) The attacker attempted to dump the minted tokens on DEXes, but market liquidity was insufficient to absorb such volume. The massive sell pressure caused an immediate price collapse, and only ~$237K in ETH was successfully extracted. (5) The incident demonstrates the persistent gap between technical capability and economic reality in bridge exploits: creating billions in tokens is meaningless without market depth and buyer trust to convert them."
+    },
+    {
+      "id": "aftermath-finance-2026",
+      "attack_type": "integer-overflow-underflow",
+      "thumbnail": "/thumbnails/aftermath.png",
+      "affected_protocol": {
+        "name": "Aftermath Finance",
+        "version": null
+      },
+      "date": "2026-04-28",
+      "chain": "Sui",
+      "loss_amount": "$1.14M",
+      "severity": "High",
+      "description": "Integer overflow bug allowed fee parameter to wrap negative, protocol paid attacker to trade.",
+      "attacker_tx": "4pGQdfFG96Ghqj1xqkaeeAgMQCpttivdkgSRUGc6wVD8",
+      "links": [
+      ],
+      "detailed_narrative": "Aftermath Finance lost $1.14M to an integer overflow bug. The fee was stored as u256 (always positive) but read elsewhere as signed (positive or negative). Passing a number close to the max, the signed reading wraps it to a huge negative, turning the fee into a rebate. The protocol pays you to trade. Aftermath's perp source is private, but the exploit was reconstructed from the on-chain trace: (1) Call create_integrator_info with u256 fee = 2^256 - 10^17 (looks like a huge positive number, reads as -10^17 signed). (2) Place matching limit and market orders between two of their own accounts. (3) Each trade fires PaidIntegratorFees — protocol sends USDC to the integrator (attacker). (4) Atomic, repeatable, ~$79K profit per cycle. Final on-chain proof from the exploit tx: PaidIntegratorFees event records: fees: 115792089237316195423570985008687907853269984665640563689698454007913129639936 (= -3.5×10^17 in signed i256), integrator_address: 0x1a65086c... (the attacker). The protocol logged itself paying a wrapped-negative fee to the exploiter. Function signature on-chain confirms: clearing_house::create_integrator_info(Address, U256) with no bounds check. The April pattern of missing parameter bounds: Singularity: oracle fee tier set to 42 (Uniswap only supports 100/500/3000/10000); Aftermath: u256 fee parameter wraps to negative when read as signed; Scallop: spool created without last_index initialization. Same root cause across all three: setters that don't enforce the value range invariants the rest of the contract assumes. AI agents test boundary values automatically. Wrap a number, free money comes out."
     }
   ]
 }
